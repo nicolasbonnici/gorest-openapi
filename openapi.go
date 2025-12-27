@@ -1,20 +1,16 @@
 package openapi
 
 import (
-	"context"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/nicolasbonnici/gorest/codegen"
-	"github.com/nicolasbonnici/gorest/database"
 	"github.com/nicolasbonnici/gorest/plugin"
 )
 
-// OpenAPIPlugin provides runtime OpenAPI schema serving
 type OpenAPIPlugin struct {
-	db                 database.Database
 	paginationLimit    int
 	paginationMaxLimit int
-	tables             map[string]codegen.TableSchema
+	dtosDirectory      string
 }
 
 func NewPlugin() plugin.Plugin {
@@ -26,31 +22,16 @@ func (p *OpenAPIPlugin) Name() string {
 }
 
 func (p *OpenAPIPlugin) Initialize(cfg map[string]interface{}) error {
-	if db, ok := cfg["database"].(database.Database); ok {
-		p.db = db
-
-		// Load schema from database
-		schemaSlice, err := db.Introspector().LoadSchema(context.Background())
-		if err != nil {
-			return err
-		}
-
-		// Convert to table schemas
-		p.tables = make(map[string]codegen.TableSchema)
-		for _, t := range schemaSlice {
-			p.tables[t.TableName] = codegen.TableSchema{
-				TableName: t.TableName,
-				Columns:   convertColumns(t.Columns),
-				Relations: convertRelations(t.Relations),
-			}
-		}
-	}
-
 	if limit, ok := cfg["pagination_limit"].(int); ok {
 		p.paginationLimit = limit
 	}
 	if maxLimit, ok := cfg["pagination_max_limit"].(int); ok {
 		p.paginationMaxLimit = maxLimit
+	}
+	if dtosDir, ok := cfg["dtos_directory"].(string); ok {
+		p.dtosDirectory = dtosDir
+	} else {
+		return fmt.Errorf("dtos_directory required in plugin config")
 	}
 
 	return nil
@@ -98,32 +79,21 @@ func (p *OpenAPIPlugin) SetupEndpoints(app *fiber.App) error {
 		return c.SendString(html)
 	})
 
-	// Setup dynamic OpenAPI JSON endpoint
-	codegen.SetupOpenAPI(app, p.tables, p.paginationLimit, p.paginationMaxLimit)
+	app.Get("/openapi.json", func(c *fiber.Ctx) error {
+		spec, err := generateOpenAPISpec(app, GeneratorConfig{
+			DTOsDirectory:      p.dtosDirectory,
+			PaginationLimit:    p.paginationLimit,
+			PaginationMaxLimit: p.paginationMaxLimit,
+		})
+
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{
+				"error": fmt.Sprintf("Failed to generate OpenAPI spec: %v", err),
+			})
+		}
+
+		return c.JSON(spec)
+	})
+
 	return nil
-}
-
-func convertColumns(dbCols []database.Column) []codegen.Column {
-	cols := make([]codegen.Column, len(dbCols))
-	for i, c := range dbCols {
-		cols[i] = codegen.Column{
-			Name:       c.Name,
-			Type:       c.Type,
-			IsNullable: c.IsNullable,
-		}
-	}
-	return cols
-}
-
-func convertRelations(dbRels []database.Relation) []codegen.Relation {
-	rels := make([]codegen.Relation, len(dbRels))
-	for i, r := range dbRels {
-		rels[i] = codegen.Relation{
-			ChildTable:   r.ChildTable,
-			ChildColumn:  r.ChildColumn,
-			ParentTable:  r.ParentTable,
-			ParentColumn: r.ParentColumn,
-		}
-	}
-	return rels
 }
