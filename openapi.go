@@ -67,6 +67,15 @@ func (p *OpenAPIPlugin) Handler() fiber.Handler {
 func (p *OpenAPIPlugin) SetupEndpoints(app *fiber.App) error {
 	// Setup OpenAPI UI endpoint
 	app.Get("/openapi", func(c *fiber.Ctx) error {
+		// Override CSP to allow loading external scripts and styles for Scalar UI
+		c.Set("Content-Security-Policy",
+			"default-src 'self'; "+
+				"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; "+
+				"style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "+
+				"font-src 'self' https://cdn.jsdelivr.net data:; "+
+				"img-src 'self' data: https:; "+
+				"connect-src 'self' https:;")
+
 		html := `<!DOCTYPE html>
 <html>
 <head>
