@@ -33,7 +33,31 @@ Add to your `gorest.yaml`:
 plugins:
   - name: openapi
     enabled: true
+    config:
+      # Required
+      dtos_directory: "./dtos"  # Path to your DTOs directory
+
+      # Optional API information (with defaults shown)
+      title: "My API"                                    # default: "GoREST API"
+      version: "1.0.0"                                   # default: "1.0.0"
+      description: "My awesome API documentation"        # default: "Auto-generated REST API with full CRUD operations"
+
+      # Optional pagination settings (with defaults shown)
+      pagination_limit: 20      # default: 20
+      pagination_max_limit: 100 # default: 100
 ```
+
+#### Minimal Configuration
+
+```yaml
+plugins:
+  - name: openapi
+    enabled: true
+    config:
+      dtos_directory: "./dtos"
+```
+
+**Note:** The server URL is automatically detected from incoming requests, so it works with any port your application runs on.
 
 ## Features
 

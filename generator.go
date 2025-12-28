@@ -11,6 +11,10 @@ type GeneratorConfig struct {
 	DTOsDirectory      string
 	PaginationLimit    int
 	PaginationMaxLimit int
+	ServerURL          string
+	Title              string
+	Version            string
+	Description        string
 }
 
 func generateOpenAPISpec(app *fiber.App, cfg GeneratorConfig) (map[string]interface{}, error) {
@@ -76,12 +80,12 @@ func generateOpenAPISpec(app *fiber.App, cfg GeneratorConfig) (map[string]interf
 	return map[string]interface{}{
 		"openapi": "3.0.0",
 		"info": map[string]interface{}{
-			"title":       "GoREST API",
-			"version":     "1.0.0",
-			"description": "Auto-generated REST API with full CRUD operations",
+			"title":       cfg.Title,
+			"version":     cfg.Version,
+			"description": cfg.Description,
 		},
 		"servers": []map[string]string{
-			{"url": "http://localhost:3000", "description": "Development server"},
+			{"url": cfg.ServerURL, "description": "Development server"},
 		},
 		"paths":      paths,
 		"components": components,
