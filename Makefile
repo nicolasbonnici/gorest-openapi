@@ -1,4 +1,4 @@
-.PHONY: help test lint lint-fix build clean install
+.PHONY: help test test-coverage lint lint-fix build clean install
 
 # Default target
 .DEFAULT_GOAL := help
@@ -25,6 +25,26 @@ test: ## Run tests with coverage
 		go test -v ./... || true; \
 	fi
 
+test-coverage: ## Run tests with detailed coverage report and HTML output
+	@echo "Running tests with coverage..."
+	@go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+	@echo ""
+	@echo "==================================================================="
+	@echo "Coverage Summary:"
+	@echo "==================================================================="
+	@go tool cover -func=coverage.out
+	@echo ""
+	@echo "==================================================================="
+	@echo "Total Coverage:"
+	@go tool cover -func=coverage.out | grep total | awk '{print "  " $$3}'
+	@echo "==================================================================="
+	@echo ""
+	@echo "Generating HTML coverage report..."
+	@go tool cover -html=coverage.out -o coverage.html
+	@echo "✓ HTML coverage report generated: coverage.html"
+	@echo ""
+	@echo "To view the HTML report, open coverage.html in your browser"
+
 lint: ## Run linter
 	@echo "Running golangci-lint..."
 	@PATH="$(PATH):$$(go env GOPATH)/bin" golangci-lint run ./...
@@ -41,5 +61,5 @@ build: ## Build verification
 clean: ## Clean build artifacts and caches
 	@echo "Cleaning..."
 	@go clean -cache -testcache -modcache
-	@rm -f coverage.out
+	@rm -f coverage.out coverage.html
 	@echo "✓ Cleaned"
