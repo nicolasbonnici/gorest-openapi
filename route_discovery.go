@@ -71,7 +71,7 @@ func generateRouteSpec(path, method string) map[string]interface{} {
 
 func determineTag(path string) string {
 	parts := strings.Split(strings.Trim(path, "/"), "/")
-	if len(parts) == 0 {
+	if len(parts) == 0 || parts[0] == "" {
 		return "General"
 	}
 

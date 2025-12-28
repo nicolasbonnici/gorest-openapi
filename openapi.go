@@ -11,6 +11,9 @@ type OpenAPIPlugin struct {
 	paginationLimit    int
 	paginationMaxLimit int
 	dtosDirectory      string
+	title              string
+	version            string
+	description        string
 }
 
 func NewPlugin() plugin.Plugin {
@@ -32,6 +35,23 @@ func (p *OpenAPIPlugin) Initialize(cfg map[string]interface{}) error {
 		p.dtosDirectory = dtosDir
 	} else {
 		return fmt.Errorf("dtos_directory required in plugin config")
+	}
+
+	// API info with defaults
+	if title, ok := cfg["title"].(string); ok {
+		p.title = title
+	} else {
+		p.title = "GoREST API"
+	}
+	if version, ok := cfg["version"].(string); ok {
+		p.version = version
+	} else {
+		p.version = "1.0.0"
+	}
+	if description, ok := cfg["description"].(string); ok {
+		p.description = description
+	} else {
+		p.description = "Auto-generated REST API with full CRUD operations"
 	}
 
 	return nil
@@ -80,10 +100,21 @@ func (p *OpenAPIPlugin) SetupEndpoints(app *fiber.App) error {
 	})
 
 	app.Get("/openapi.json", func(c *fiber.Ctx) error {
+		// Build server URL from request
+		protocol := "http"
+		if c.Protocol() == "https" {
+			protocol = "https"
+		}
+		serverURL := fmt.Sprintf("%s://%s", protocol, c.Hostname())
+
 		spec, err := generateOpenAPISpec(app, GeneratorConfig{
 			DTOsDirectory:      p.dtosDirectory,
 			PaginationLimit:    p.paginationLimit,
 			PaginationMaxLimit: p.paginationMaxLimit,
+			ServerURL:          serverURL,
+			Title:              p.title,
+			Version:            p.version,
+			Description:        p.description,
 		})
 
 		if err != nil {

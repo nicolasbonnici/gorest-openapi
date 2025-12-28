@@ -1,4 +1,4 @@
-.PHONY: help test lint lint-fix build clean install
+.PHONY: help test test-coverage lint lint-fix build clean install
 
 # Default target
 .DEFAULT_GOAL := help
@@ -14,19 +14,44 @@ install: ## Install development tools
 
 test: ## Run tests with coverage
 	@echo "Running tests..."
+	@if go list -f '{{.TestGoFiles}}' ./... 2>/dev/null | grep -q '.go'; then \
+		go test -v -race -coverprofile=coverage.out -covermode=atomic ./... && \
+		echo "" && \
+		echo "Coverage summary:" && \
+		go tool cover -func=coverage.out && \
+		rm -f coverage.out; \
+	else \
+		echo "No test files found. Skipping tests."; \
+		go test -v ./... || true; \
+	fi
+
+test-coverage: ## Run tests with detailed coverage report and HTML output
+	@echo "Running tests with coverage..."
 	@go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
 	@echo ""
-	@echo "Coverage summary:"
+	@echo "==================================================================="
+	@echo "Coverage Summary:"
+	@echo "==================================================================="
 	@go tool cover -func=coverage.out
-	@rm -f coverage.out
+	@echo ""
+	@echo "==================================================================="
+	@echo "Total Coverage:"
+	@go tool cover -func=coverage.out | grep total | awk '{print "  " $$3}'
+	@echo "==================================================================="
+	@echo ""
+	@echo "Generating HTML coverage report..."
+	@go tool cover -html=coverage.out -o coverage.html
+	@echo "✓ HTML coverage report generated: coverage.html"
+	@echo ""
+	@echo "To view the HTML report, open coverage.html in your browser"
 
 lint: ## Run linter
 	@echo "Running golangci-lint..."
-	@golangci-lint run ./...
+	@PATH="$(PATH):$$(go env GOPATH)/bin" golangci-lint run ./...
 
 lint-fix: ## Run linter with auto-fix
 	@echo "Running golangci-lint with auto-fix..."
-	@golangci-lint run --fix ./...
+	@PATH="$(PATH):$$(go env GOPATH)/bin" golangci-lint run --fix ./...
 
 build: ## Build verification
 	@echo "Building plugin..."
@@ -36,5 +61,5 @@ build: ## Build verification
 clean: ## Clean build artifacts and caches
 	@echo "Cleaning..."
 	@go clean -cache -testcache -modcache
-	@rm -f coverage.out
+	@rm -f coverage.out coverage.html
 	@echo "✓ Cleaned"
