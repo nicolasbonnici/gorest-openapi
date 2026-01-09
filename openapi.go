@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/nicolasbonnici/gorest/logger"
 	"github.com/nicolasbonnici/gorest/plugin"
 )
 
@@ -125,6 +126,9 @@ func (p *OpenAPIPlugin) SetupEndpoints(app *fiber.App) error {
 
 		return c.JSON(spec)
 	})
+
+	logger.Log.Info("Api spec available", "url", fmt.Sprintf("http://localhost:%s/%s", "8000", "openapi"))
+	logger.Log.Info("Api spec available (json format)", "url", fmt.Sprintf("http://localhost:%s/%s", "8000", "openapi.json"))
 
 	return nil
 }
