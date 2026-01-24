@@ -12,6 +12,7 @@ type OpenAPIPlugin struct {
 	paginationLimit    int
 	paginationMaxLimit int
 	dtosDirectory      string
+	pluginRegistry     *plugin.PluginRegistry
 	title              string
 	version            string
 	description        string
@@ -34,11 +35,12 @@ func (p *OpenAPIPlugin) Initialize(cfg map[string]interface{}) error {
 	}
 	if dtosDir, ok := cfg["dtos_directory"].(string); ok {
 		p.dtosDirectory = dtosDir
-	} else {
-		return fmt.Errorf("dtos_directory required in plugin config")
 	}
 
-	// API info with defaults
+	if registry, ok := cfg["plugin_registry"].(*plugin.PluginRegistry); ok {
+		p.pluginRegistry = registry
+	}
+
 	if title, ok := cfg["title"].(string); ok {
 		p.title = title
 	} else {
@@ -110,6 +112,7 @@ func (p *OpenAPIPlugin) SetupEndpoints(app *fiber.App) error {
 
 		spec, err := generateOpenAPISpec(app, GeneratorConfig{
 			DTOsDirectory:      p.dtosDirectory,
+			PluginRegistry:     p.pluginRegistry,
 			PaginationLimit:    p.paginationLimit,
 			PaginationMaxLimit: p.paginationMaxLimit,
 			ServerURL:          serverURL,
