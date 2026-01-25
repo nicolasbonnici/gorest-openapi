@@ -146,21 +146,23 @@ func applyValidationRules(property map[string]interface{}, validateTag string) {
 		case "uuid":
 			property["format"] = "uuid"
 		case "min":
-			if property["type"] == "string" {
+			switch property["type"] {
+			case "string":
 				if minLength := parseIntOrZero(ruleValue); minLength > 0 {
 					property["minLength"] = minLength
 				}
-			} else if property["type"] == "integer" || property["type"] == "number" {
+			case "integer", "number":
 				if min := parseIntOrZero(ruleValue); min > 0 {
 					property["minimum"] = min
 				}
 			}
 		case "max":
-			if property["type"] == "string" {
+			switch property["type"] {
+			case "string":
 				if maxLength := parseIntOrZero(ruleValue); maxLength > 0 {
 					property["maxLength"] = maxLength
 				}
-			} else if property["type"] == "integer" || property["type"] == "number" {
+			case "integer", "number":
 				if max := parseIntOrZero(ruleValue); max > 0 {
 					property["maximum"] = max
 				}

@@ -27,14 +27,18 @@ func (p *OpenAPIPlugin) Name() string {
 }
 
 func (p *OpenAPIPlugin) Initialize(cfg map[string]interface{}) error {
+	// Validate required dtos_directory
+	dtosDir, ok := cfg["dtos_directory"].(string)
+	if !ok || dtosDir == "" {
+		return fmt.Errorf("dtos_directory is required")
+	}
+	p.dtosDirectory = dtosDir
+
 	if limit, ok := cfg["pagination_limit"].(int); ok {
 		p.paginationLimit = limit
 	}
 	if maxLimit, ok := cfg["pagination_max_limit"].(int); ok {
 		p.paginationMaxLimit = maxLimit
-	}
-	if dtosDir, ok := cfg["dtos_directory"].(string); ok {
-		p.dtosDirectory = dtosDir
 	}
 
 	if registry, ok := cfg["plugin_registry"].(*plugin.PluginRegistry); ok {
