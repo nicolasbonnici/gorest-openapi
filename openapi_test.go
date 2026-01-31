@@ -97,12 +97,16 @@ func TestOpenAPIPlugin_Initialize(t *testing.T) {
 			},
 		},
 		{
-			name: "error when dtos_directory is missing",
+			name: "dtos_directory is optional",
 			cfg: map[string]interface{}{
 				"title": "Test API",
 			},
-			wantErr: true,
-			validate: func(t *testing.T, p *OpenAPIPlugin) {},
+			wantErr: false,
+			validate: func(t *testing.T, p *OpenAPIPlugin) {
+				if p.dtosDirectory != "" {
+					t.Errorf("dtosDirectory = %v, want empty string when not provided", p.dtosDirectory)
+				}
+			},
 		},
 		{
 			name: "ignore invalid config types",
