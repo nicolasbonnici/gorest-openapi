@@ -3,7 +3,7 @@ module github.com/nicolasbonnici/gorest-openapi
 go 1.25.1
 
 require (
-	github.com/gofiber/fiber/v2 v2.52.10
+	github.com/gofiber/fiber/v2 v2.52.11
 	github.com/google/uuid v1.6.0
 	github.com/nicolasbonnici/gorest v0.4.8
 )
