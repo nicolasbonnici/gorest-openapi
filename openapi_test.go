@@ -38,9 +38,9 @@ func TestOpenAPIPlugin_Name(t *testing.T) {
 
 func TestOpenAPIPlugin_Initialize(t *testing.T) {
 	tests := []struct {
-		name    string
-		cfg     map[string]interface{}
-		wantErr bool
+		name     string
+		cfg      map[string]interface{}
+		wantErr  bool
 		validate func(t *testing.T, p *OpenAPIPlugin)
 	}{
 		{

@@ -226,7 +226,7 @@ func TestPluralize(t *testing.T) {
 		{
 			name: "z -> es",
 			word: "quiz",
-			want: "quizes",
+			want: "quizzes",
 		},
 		// Words ending in 'ch' -> 'es'
 		{
