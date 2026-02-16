@@ -271,7 +271,7 @@ func TestGenerateRequestBody(t *testing.T) {
 		},
 	}
 
-	got := generateRequestBody("/users")
+	got := generateRequestBody()
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("generateRequestBody() = %v, want %v", got, want)
 	}

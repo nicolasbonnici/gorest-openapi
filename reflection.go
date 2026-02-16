@@ -27,42 +27,7 @@ func buildSchemaFromModel(model interface{}) map[string]interface{} {
 
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-
-		if !field.IsExported() {
-			continue
-		}
-
-		jsonTag := field.Tag.Get("json")
-		if jsonTag == "-" {
-			continue
-		}
-
-		jsonName := strings.Split(jsonTag, ",")[0]
-		if jsonName == "" {
-			jsonName = field.Name
-		}
-
-		isOmitEmpty := strings.Contains(jsonTag, "omitempty")
-		fieldType := field.Type
-		isPointer := fieldType.Kind() == reflect.Ptr
-
-		if isPointer {
-			fieldType = fieldType.Elem()
-		}
-
-		property := buildPropertySchema(fieldType, field.Tag)
-		property["nullable"] = isPointer
-
-		validateTag := field.Tag.Get("validate")
-		applyValidationRules(property, validateTag)
-
-		properties[jsonName] = property
-
-		if !isPointer && !isOmitEmpty && jsonName != "id" && jsonName != "createdAt" && jsonName != "updatedAt" {
-			if !strings.Contains(validateTag, "omitempty") {
-				required = append(required, jsonName)
-			}
-		}
+		processStructField(field, properties, &required)
 	}
 
 	schema := map[string]interface{}{
@@ -75,6 +40,55 @@ func buildSchemaFromModel(model interface{}) map[string]interface{} {
 	}
 
 	return schema
+}
+
+func processStructField(field reflect.StructField, properties map[string]interface{}, required *[]string) {
+	if !field.IsExported() {
+		return
+	}
+
+	jsonTag := field.Tag.Get("json")
+	if jsonTag == "-" {
+		return
+	}
+
+	jsonName := strings.Split(jsonTag, ",")[0]
+	if jsonName == "" {
+		jsonName = field.Name
+	}
+
+	isOmitEmpty := strings.Contains(jsonTag, "omitempty")
+	fieldType := field.Type
+	isPointer := fieldType.Kind() == reflect.Ptr
+
+	if isPointer {
+		fieldType = fieldType.Elem()
+	}
+
+	property := buildPropertySchema(fieldType, field.Tag)
+	property["nullable"] = isPointer
+
+	validateTag := field.Tag.Get("validate")
+	applyValidationRules(property, validateTag)
+
+	properties[jsonName] = property
+
+	if shouldBeRequired(jsonName, isPointer, isOmitEmpty, validateTag) {
+		*required = append(*required, jsonName)
+	}
+}
+
+func shouldBeRequired(jsonName string, isPointer, isOmitEmpty bool, validateTag string) bool {
+	if isPointer || isOmitEmpty {
+		return false
+	}
+	if jsonName == "id" || jsonName == "createdAt" || jsonName == "updatedAt" {
+		return false
+	}
+	if strings.Contains(validateTag, "omitempty") {
+		return false
+	}
+	return true
 }
 
 func buildPropertySchema(t reflect.Type, tag reflect.StructTag) map[string]interface{} {
@@ -139,42 +153,59 @@ func applyValidationRules(property map[string]interface{}, validateTag string) {
 			ruleValue = strings.TrimSpace(parts[1])
 		}
 
-		switch ruleName {
-		case "required":
-		case "email":
-			property["format"] = "email"
-		case "uuid":
-			property["format"] = "uuid"
-		case "min":
-			switch property["type"] {
-			case "string":
-				if minLength := parseIntOrZero(ruleValue); minLength > 0 {
-					property["minLength"] = minLength
-				}
-			case "integer", "number":
-				if min := parseIntOrZero(ruleValue); min > 0 {
-					property["minimum"] = min
-				}
-			}
-		case "max":
-			switch property["type"] {
-			case "string":
-				if maxLength := parseIntOrZero(ruleValue); maxLength > 0 {
-					property["maxLength"] = maxLength
-				}
-			case "integer", "number":
-				if max := parseIntOrZero(ruleValue); max > 0 {
-					property["maximum"] = max
-				}
-			}
-		case "url":
-			property["format"] = "uri"
-		case "oneof":
-			if property["type"] == "string" {
-				values := strings.Split(ruleValue, " ")
-				property["enum"] = values
-			}
+		applyValidationRule(property, ruleName, ruleValue)
+	}
+}
+
+func applyValidationRule(property map[string]interface{}, ruleName, ruleValue string) {
+	switch ruleName {
+	case "required":
+		// No-op
+	case "email":
+		property["format"] = "email"
+	case "uuid":
+		property["format"] = "uuid"
+	case "min":
+		applyMinRule(property, ruleValue)
+	case "max":
+		applyMaxRule(property, ruleValue)
+	case "url":
+		property["format"] = "uri"
+	case "oneof":
+		applyOneOfRule(property, ruleValue)
+	}
+}
+
+func applyMinRule(property map[string]interface{}, ruleValue string) {
+	switch property["type"] {
+	case "string":
+		if minLength := parseIntOrZero(ruleValue); minLength > 0 {
+			property["minLength"] = minLength
 		}
+	case "integer", "number":
+		if min := parseIntOrZero(ruleValue); min > 0 {
+			property["minimum"] = min
+		}
+	}
+}
+
+func applyMaxRule(property map[string]interface{}, ruleValue string) {
+	switch property["type"] {
+	case "string":
+		if maxLength := parseIntOrZero(ruleValue); maxLength > 0 {
+			property["maxLength"] = maxLength
+		}
+	case "integer", "number":
+		if max := parseIntOrZero(ruleValue); max > 0 {
+			property["maximum"] = max
+		}
+	}
+}
+
+func applyOneOfRule(property map[string]interface{}, ruleValue string) {
+	if property["type"] == "string" {
+		values := strings.Split(ruleValue, " ")
+		property["enum"] = values
 	}
 }
 

@@ -34,9 +34,11 @@ func pluralize(word string) string {
 	if strings.HasSuffix(word, "f") {
 		return word[:len(word)-1] + "ves"
 	}
+	if strings.HasSuffix(word, "z") {
+		return word + "zes"
+	}
 	if strings.HasSuffix(word, "s") || strings.HasSuffix(word, "x") ||
-		strings.HasSuffix(word, "z") || strings.HasSuffix(word, "ch") ||
-		strings.HasSuffix(word, "sh") {
+		strings.HasSuffix(word, "ch") || strings.HasSuffix(word, "sh") {
 		return word + "es"
 	}
 	return word + "s"

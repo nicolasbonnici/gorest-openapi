@@ -61,7 +61,7 @@ func generateRouteSpec(path, method string) map[string]interface{} {
 	}
 
 	if method == "POST" || method == "PUT" || method == "PATCH" {
-		spec["requestBody"] = generateRequestBody(path)
+		spec["requestBody"] = generateRequestBody()
 	}
 
 	spec["responses"] = generateResponses(method)
@@ -136,7 +136,7 @@ func extractPathParameters(path string) []map[string]interface{} {
 	return params
 }
 
-func generateRequestBody(path string) map[string]interface{} {
+func generateRequestBody() map[string]interface{} {
 	return map[string]interface{}{
 		"required": true,
 		"content": map[string]interface{}{
