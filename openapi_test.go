@@ -508,13 +508,13 @@ type TestDTO struct {
 
 func TestOpenAPIPlugin_Initialize_HideOnProduction(t *testing.T) {
 	tests := []struct {
-		name                    string
-		cfg                     map[string]interface{}
+		name                     string
+		cfg                      map[string]interface{}
 		expectedHideOnProduction bool
 	}{
 		{
-			name:                    "defaults to true when not specified",
-			cfg:                     map[string]interface{}{},
+			name:                     "defaults to true when not specified",
+			cfg:                      map[string]interface{}{},
 			expectedHideOnProduction: true,
 		},
 		{
