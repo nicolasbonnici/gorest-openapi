@@ -122,6 +122,9 @@ func validateAllConfigValues(t *testing.T, p *OpenAPIPlugin) {
 	if p.description != "Custom Description" {
 		t.Errorf("description = %v, want 'Custom Description'", p.description)
 	}
+	if !p.hideOnProduction {
+		t.Errorf("hideOnProduction = %v, want true (default)", p.hideOnProduction)
+	}
 }
 
 func validateMinimalConfig(t *testing.T, p *OpenAPIPlugin) {
@@ -137,6 +140,9 @@ func validateMinimalConfig(t *testing.T, p *OpenAPIPlugin) {
 	if p.description != "Auto-generated REST API with full CRUD operations" {
 		t.Errorf("description = %v, want default description", p.description)
 	}
+	if !p.hideOnProduction {
+		t.Errorf("hideOnProduction = %v, want true (default)", p.hideOnProduction)
+	}
 }
 
 func validateOptionalDTOsDirectory(t *testing.T, p *OpenAPIPlugin) {
@@ -151,6 +157,9 @@ func validateInvalidConfigTypes(t *testing.T, p *OpenAPIPlugin) {
 	}
 	if p.title != "GoREST API" {
 		t.Errorf("title = %v, want 'GoREST API' (invalid type, use default)", p.title)
+	}
+	if !p.hideOnProduction {
+		t.Errorf("hideOnProduction = %v, want true (default)", p.hideOnProduction)
 	}
 }
 
@@ -242,6 +251,7 @@ func setupOpenAPIHTMLTest(t *testing.T) (*OpenAPIPlugin, *fiber.App) {
 		title:              "Test API",
 		version:            "1.0.0",
 		description:        "Test Description",
+		hideOnProduction:   false,
 	}
 	app := fiber.New()
 	return plugin, app
@@ -309,6 +319,7 @@ type UserDTO struct {
 		title:              "Test API",
 		version:            "1.0.0",
 		description:        "Test Description",
+		hideOnProduction:   false,
 	}
 	app := fiber.New()
 	return plugin, app
@@ -376,6 +387,7 @@ func setupOpenAPIErrorTest(t *testing.T) (*OpenAPIPlugin, *fiber.App) {
 		title:              "Test API",
 		version:            "1.0.0",
 		description:        "Test Description",
+		hideOnProduction:   false,
 	}
 	app := fiber.New()
 	return plugin, app
@@ -395,6 +407,134 @@ func validateOpenAPIErrorResponse(t *testing.T, resp *http.Response) {
 
 	if _, exists := errorResp["error"]; !exists {
 		t.Error("Error response should contain 'error' field")
+	}
+}
+
+func TestOpenAPIPlugin_HideOnProduction(t *testing.T) {
+	tests := []struct {
+		name             string
+		hideOnProduction bool
+		expectEndpoints  bool
+	}{
+		{
+			name:             "endpoints disabled when hideOnProduction is true",
+			hideOnProduction: true,
+			expectEndpoints:  false,
+		},
+		{
+			name:             "endpoints enabled when hideOnProduction is false",
+			hideOnProduction: false,
+			expectEndpoints:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tempDir := t.TempDir()
+			dtoContent := `package dto
+
+type TestDTO struct {
+	ID int64 ` + "`json:\"id\"`" + `
+}`
+			err := os.WriteFile(filepath.Join(tempDir, "test.go"), []byte(dtoContent), 0644)
+			if err != nil {
+				t.Fatalf("Failed to create test DTO: %v", err)
+			}
+
+			plugin := &OpenAPIPlugin{
+				dtosDirectory:      tempDir,
+				paginationLimit:    20,
+				paginationMaxLimit: 100,
+				title:              "Test API",
+				version:            "1.0.0",
+				description:        "Test Description",
+				hideOnProduction:   tt.hideOnProduction,
+			}
+
+			app := fiber.New()
+			err = plugin.SetupEndpoints(app)
+			if err != nil {
+				t.Fatalf("SetupEndpoints() error = %v", err)
+			}
+
+			// Test /openapi endpoint
+			req := httptest.NewRequest("GET", "/openapi", nil)
+			req.Host = "localhost"
+			resp, err := app.Test(req)
+			if err != nil {
+				t.Fatalf("Test request failed: %v", err)
+			}
+
+			if tt.expectEndpoints {
+				if resp.StatusCode != 200 {
+					t.Errorf("Expected /openapi to be available (200), got %v", resp.StatusCode)
+				}
+			} else {
+				if resp.StatusCode != 404 {
+					t.Errorf("Expected /openapi to be disabled (404), got %v", resp.StatusCode)
+				}
+			}
+
+			// Test /openapi.json endpoint
+			req = httptest.NewRequest("GET", "/openapi.json", nil)
+			req.Host = "localhost"
+			resp, err = app.Test(req)
+			if err != nil {
+				t.Fatalf("Test request failed: %v", err)
+			}
+
+			if tt.expectEndpoints {
+				if resp.StatusCode != 200 {
+					t.Errorf("Expected /openapi.json to be available (200), got %v", resp.StatusCode)
+				}
+			} else {
+				if resp.StatusCode != 404 {
+					t.Errorf("Expected /openapi.json to be disabled (404), got %v", resp.StatusCode)
+				}
+			}
+		})
+	}
+}
+
+func TestOpenAPIPlugin_Initialize_HideOnProduction(t *testing.T) {
+	tests := []struct {
+		name                    string
+		cfg                     map[string]interface{}
+		expectedHideOnProduction bool
+	}{
+		{
+			name:                    "defaults to true when not specified",
+			cfg:                     map[string]interface{}{},
+			expectedHideOnProduction: true,
+		},
+		{
+			name: "can be set to false",
+			cfg: map[string]interface{}{
+				"hide_on_production": false,
+			},
+			expectedHideOnProduction: false,
+		},
+		{
+			name: "can be set to true explicitly",
+			cfg: map[string]interface{}{
+				"hide_on_production": true,
+			},
+			expectedHideOnProduction: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			plugin := &OpenAPIPlugin{}
+			err := plugin.Initialize(tt.cfg)
+			if err != nil {
+				t.Fatalf("Initialize() error = %v", err)
+			}
+
+			if plugin.hideOnProduction != tt.expectedHideOnProduction {
+				t.Errorf("hideOnProduction = %v, want %v", plugin.hideOnProduction, tt.expectedHideOnProduction)
+			}
+		})
 	}
 }
 
@@ -438,6 +578,7 @@ type TestDTO struct {
 				title:              "Test API",
 				version:            "1.0.0",
 				description:        "Test Description",
+				hideOnProduction:   false,
 			}
 
 			app := fiber.New()

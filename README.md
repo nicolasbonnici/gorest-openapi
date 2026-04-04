@@ -59,6 +59,9 @@ plugins:
       # Optional pagination settings (with defaults shown)
       pagination_limit: 20      # default: 20
       pagination_max_limit: 100 # default: 100
+
+      # Optional security settings
+      hide_on_production: true  # default: true - disables /openapi endpoints when true
 ```
 
 #### Minimal Configuration
@@ -71,6 +74,19 @@ plugins:
       dtos_directory: "./dtos"
 ```
 
+#### Development Environment Configuration
+
+For development environments where you want to enable the OpenAPI endpoints:
+
+```yaml
+plugins:
+  - name: openapi
+    enabled: true
+    config:
+      dtos_directory: "./dtos"
+      hide_on_production: false  # Enable OpenAPI endpoints for development
+```
+
 **Note:** The server URL is automatically detected from incoming requests, so it works with any port your application runs on.
 
 ## Features
@@ -80,6 +96,7 @@ plugins:
 - OpenAPI JSON schema at `/openapi.json`
 - Dynamic schema generation from database
 - Scalar API reference integration
+- Production-ready security with `hide_on_production` flag (enabled by default)
 
 ## Endpoints
 

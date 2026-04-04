@@ -16,6 +16,7 @@ type OpenAPIPlugin struct {
 	title              string
 	version            string
 	description        string
+	hideOnProduction   bool
 }
 
 func NewPlugin() plugin.Plugin {
@@ -58,6 +59,12 @@ func (p *OpenAPIPlugin) Initialize(cfg map[string]interface{}) error {
 		p.description = "Auto-generated REST API with full CRUD operations"
 	}
 
+	// Default to true to hide OpenAPI endpoints in production
+	p.hideOnProduction = true
+	if hide, ok := cfg["hide_on_production"].(bool); ok {
+		p.hideOnProduction = hide
+	}
+
 	return nil
 }
 
@@ -70,6 +77,12 @@ func (p *OpenAPIPlugin) Handler() fiber.Handler {
 
 // SetupEndpoints implements the EndpointSetup interface
 func (p *OpenAPIPlugin) SetupEndpoints(app *fiber.App) error {
+	// Skip OpenAPI endpoints if hideOnProduction is enabled
+	if p.hideOnProduction {
+		logger.Log.Info("OpenAPI endpoints disabled (hideOnProduction=true)")
+		return nil
+	}
+
 	// Setup OpenAPI UI endpoint
 	app.Get("/openapi", func(c *fiber.Ctx) error {
 		// Override CSP to allow loading external scripts and styles for Scalar UI
