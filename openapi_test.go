@@ -414,16 +414,25 @@ func TestOpenAPIPlugin_HideOnProduction(t *testing.T) {
 	tests := []struct {
 		name             string
 		hideOnProduction bool
+		environment      string
 		expectEndpoints  bool
 	}{
 		{
-			name:             "endpoints disabled when hideOnProduction is true",
+			name:             "endpoints disabled when hideOnProduction is true in production",
 			hideOnProduction: true,
+			environment:      "production",
 			expectEndpoints:  false,
 		},
 		{
 			name:             "endpoints enabled when hideOnProduction is false",
 			hideOnProduction: false,
+			environment:      "production",
+			expectEndpoints:  true,
+		},
+		{
+			name:             "endpoints enabled when hideOnProduction is true but not in production",
+			hideOnProduction: true,
+			environment:      "development",
 			expectEndpoints:  true,
 		},
 	}
@@ -449,6 +458,7 @@ type TestDTO struct {
 				version:            "1.0.0",
 				description:        "Test Description",
 				hideOnProduction:   tt.hideOnProduction,
+				environment:        tt.environment,
 			}
 
 			app := fiber.New()

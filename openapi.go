@@ -17,6 +17,7 @@ type OpenAPIPlugin struct {
 	version            string
 	description        string
 	hideOnProduction   bool
+	environment        string
 }
 
 func NewPlugin() plugin.Plugin {
@@ -65,6 +66,13 @@ func (p *OpenAPIPlugin) Initialize(cfg map[string]interface{}) error {
 		p.hideOnProduction = hide
 	}
 
+	// Get server environment (defaults to "development" if not set)
+	if env, ok := cfg["environment"].(string); ok {
+		p.environment = env
+	} else {
+		p.environment = "development"
+	}
+
 	return nil
 }
 
@@ -77,9 +85,13 @@ func (p *OpenAPIPlugin) Handler() fiber.Handler {
 
 // SetupEndpoints implements the EndpointSetup interface
 func (p *OpenAPIPlugin) SetupEndpoints(app *fiber.App) error {
-	// Skip OpenAPI endpoints if hideOnProduction is enabled
-	if p.hideOnProduction {
-		logger.Log.Info("OpenAPI endpoints disabled (hideOnProduction=true)")
+	// Environment-aware endpoint control:
+	// - Development: Always enable OpenAPI endpoints
+	// - Production: Only disable if hide_on_production=true
+	// - Other/Unknown: Enable by default
+
+	if p.environment == "production" && p.hideOnProduction {
+		logger.Log.Info("OpenAPI endpoints disabled in production (hide_on_production=true)")
 		return nil
 	}
 
