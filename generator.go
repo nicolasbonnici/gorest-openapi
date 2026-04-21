@@ -19,7 +19,7 @@ type GeneratorConfig struct {
 	Description        string
 }
 
-func generateOpenAPISpec(app *fiber.App, cfg GeneratorConfig) (map[string]interface{}, error) {
+func generateOpenAPISpec(router fiber.Router, cfg GeneratorConfig) (map[string]interface{}, error) {
 	paths := map[string]interface{}{}
 	components := map[string]interface{}{
 		"schemas": make(map[string]interface{}),
@@ -100,9 +100,13 @@ func generateOpenAPISpec(app *fiber.App, cfg GeneratorConfig) (map[string]interf
 		}
 	}
 
-	discoveredRoutes := discoverNonResourceRoutes(app, resourcePaths)
-	for path, methods := range discoveredRoutes {
-		paths[path] = methods
+	// Route discovery requires *fiber.App for GetRoutes() method
+	// Try to type-assert if router is the full app
+	if app, ok := router.(*fiber.App); ok {
+		discoveredRoutes := discoverNonResourceRoutes(app, resourcePaths)
+		for path, methods := range discoveredRoutes {
+			paths[path] = methods
+		}
 	}
 
 	components["securitySchemes"] = map[string]interface{}{

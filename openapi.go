@@ -84,7 +84,7 @@ func (p *OpenAPIPlugin) Handler() fiber.Handler {
 }
 
 // SetupEndpoints implements the EndpointSetup interface
-func (p *OpenAPIPlugin) SetupEndpoints(app *fiber.App) error {
+func (p *OpenAPIPlugin) SetupEndpoints(router fiber.Router) error {
 	// Environment-aware endpoint control:
 	// - Development: Always enable OpenAPI endpoints
 	// - Production: Only disable if hide_on_production=true
@@ -96,7 +96,7 @@ func (p *OpenAPIPlugin) SetupEndpoints(app *fiber.App) error {
 	}
 
 	// Setup OpenAPI UI endpoint
-	app.Get("/openapi", func(c *fiber.Ctx) error {
+	router.Get("/openapi", func(c *fiber.Ctx) error {
 		// Override CSP to allow loading external scripts and styles for Scalar UI
 		c.Set("Content-Security-Policy",
 			"default-src 'self'; "+
@@ -128,7 +128,7 @@ func (p *OpenAPIPlugin) SetupEndpoints(app *fiber.App) error {
 		return c.SendString(html)
 	})
 
-	app.Get("/openapi.json", func(c *fiber.Ctx) error {
+	router.Get("/openapi.json", func(c *fiber.Ctx) error {
 		// Build server URL from request
 		protocol := "http"
 		if c.Protocol() == "https" {
@@ -136,7 +136,7 @@ func (p *OpenAPIPlugin) SetupEndpoints(app *fiber.App) error {
 		}
 		serverURL := fmt.Sprintf("%s://%s", protocol, c.Hostname())
 
-		spec, err := generateOpenAPISpec(app, GeneratorConfig{
+		spec, err := generateOpenAPISpec(router, GeneratorConfig{
 			DTOsDirectory:      p.dtosDirectory,
 			PluginRegistry:     p.pluginRegistry,
 			PaginationLimit:    p.paginationLimit,
