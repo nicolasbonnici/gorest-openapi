@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 func TestBuildCollectionEndpoints(t *testing.T) {
@@ -454,8 +454,8 @@ type UserDTO struct {
 	}
 
 	app := fiber.New()
-	app.Get("/health", func(c *fiber.Ctx) error { return c.SendString("OK") })
-	app.Post("/auth/login", func(c *fiber.Ctx) error { return c.SendString("login") })
+	app.Get("/health", func(c fiber.Ctx) error { return c.SendString("OK") })
+	app.Post("/auth/login", func(c fiber.Ctx) error { return c.SendString("login") })
 
 	cfg := GeneratorConfig{
 		DTOsDirectory:      tempDir,

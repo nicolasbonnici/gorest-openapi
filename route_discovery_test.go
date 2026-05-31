@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 func TestShouldSkipRoute(t *testing.T) {
@@ -465,9 +465,9 @@ func TestDiscoverNonResourceRoutes(t *testing.T) {
 		{
 			name: "discover custom routes and skip resource routes",
 			setupRoutes: func(app *fiber.App) {
-				app.Get("/users", func(c *fiber.Ctx) error { return nil })
-				app.Get("/health", func(c *fiber.Ctx) error { return nil })
-				app.Post("/auth/login", func(c *fiber.Ctx) error { return nil })
+				app.Get("/users", func(c fiber.Ctx) error { return nil })
+				app.Get("/health", func(c fiber.Ctx) error { return nil })
+				app.Post("/auth/login", func(c fiber.Ctx) error { return nil })
 			},
 			resourcePaths: map[string]bool{"/users": true},
 			wantPaths:     []string{"/health", "/auth/login"},
@@ -476,9 +476,9 @@ func TestDiscoverNonResourceRoutes(t *testing.T) {
 		{
 			name: "skip OpenAPI routes",
 			setupRoutes: func(app *fiber.App) {
-				app.Get("/openapi", func(c *fiber.Ctx) error { return nil })
-				app.Get("/openapi.json", func(c *fiber.Ctx) error { return nil })
-				app.Get("/custom", func(c *fiber.Ctx) error { return nil })
+				app.Get("/openapi", func(c fiber.Ctx) error { return nil })
+				app.Get("/openapi.json", func(c fiber.Ctx) error { return nil })
+				app.Get("/custom", func(c fiber.Ctx) error { return nil })
 			},
 			resourcePaths: map[string]bool{},
 			wantPaths:     []string{"/custom"},
@@ -487,8 +487,8 @@ func TestDiscoverNonResourceRoutes(t *testing.T) {
 		{
 			name: "discover routes with path parameters",
 			setupRoutes: func(app *fiber.App) {
-				app.Get("/api/users/:id", func(c *fiber.Ctx) error { return nil })
-				app.Put("/api/users/:id", func(c *fiber.Ctx) error { return nil })
+				app.Get("/api/users/:id", func(c fiber.Ctx) error { return nil })
+				app.Put("/api/users/:id", func(c fiber.Ctx) error { return nil })
 			},
 			resourcePaths: map[string]bool{},
 			wantPaths:     []string{"/api/users/:id"},

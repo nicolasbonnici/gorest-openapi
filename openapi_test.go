@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 func TestNewPlugin(t *testing.T) {
@@ -174,7 +174,7 @@ func TestOpenAPIPlugin_Handler(t *testing.T) {
 	// Test that it's a no-op middleware (calls c.Next())
 	app := fiber.New()
 	app.Use(handler)
-	app.Get("/test", func(c *fiber.Ctx) error {
+	app.Get("/test", func(c fiber.Ctx) error {
 		return c.SendString("test response")
 	})
 

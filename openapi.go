@@ -3,7 +3,7 @@ package openapi
 import (
 	"fmt"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/nicolasbonnici/gorest/logger"
 	"github.com/nicolasbonnici/gorest/plugin"
 )
@@ -78,7 +78,7 @@ func (p *OpenAPIPlugin) Initialize(cfg map[string]interface{}) error {
 
 // Handler returns a no-op middleware
 func (p *OpenAPIPlugin) Handler() fiber.Handler {
-	return func(c *fiber.Ctx) error {
+	return func(c fiber.Ctx) error {
 		return c.Next()
 	}
 }
@@ -96,7 +96,7 @@ func (p *OpenAPIPlugin) SetupEndpoints(router fiber.Router) error {
 	}
 
 	// Setup OpenAPI UI endpoint
-	router.Get("/openapi", func(c *fiber.Ctx) error {
+	router.Get("/openapi", func(c fiber.Ctx) error {
 		// Override CSP to allow loading external scripts and styles for Scalar UI
 		c.Set("Content-Security-Policy",
 			"default-src 'self'; "+
@@ -128,7 +128,7 @@ func (p *OpenAPIPlugin) SetupEndpoints(router fiber.Router) error {
 		return c.SendString(html)
 	})
 
-	router.Get("/openapi.json", func(c *fiber.Ctx) error {
+	router.Get("/openapi.json", func(c fiber.Ctx) error {
 		// Build server URL from request
 		protocol := "http"
 		if c.Protocol() == "https" {

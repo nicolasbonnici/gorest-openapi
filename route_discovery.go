@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 func discoverNonResourceRoutes(app *fiber.App, resourcePaths map[string]bool) map[string]map[string]interface{} {
