@@ -340,37 +340,53 @@ func buildCollectionEndpointsFromResource(resource plugin.OpenAPIResource, schem
 		description = "Retrieve a list of " + resource.PluralName
 	}
 
+	params := []map[string]interface{}{
+		{
+			"name":        "limit",
+			"in":          "query",
+			"description": fmt.Sprintf("Maximum number of items to return (default: %d, max: %d)", cfg.PaginationLimit, cfg.PaginationMaxLimit),
+			"schema":      map[string]interface{}{"type": "integer", "default": cfg.PaginationLimit, "maximum": cfg.PaginationMaxLimit},
+		},
+		{
+			"name":        "offset",
+			"in":          "query",
+			"description": "Number of items to skip (default: 0)",
+			"schema":      map[string]interface{}{"type": "integer", "default": 0, "minimum": 0},
+		},
+		{
+			"name":        "count",
+			"in":          "query",
+			"description": "Include total count in response (adds hydra:totalItems field)",
+			"schema":      map[string]interface{}{"type": "boolean", "default": false},
+		},
+		{
+			"name":        "expand",
+			"in":          "query",
+			"description": "Comma-separated list of relations to expand",
+			"schema":      map[string]string{"type": "string"},
+		},
+	}
+
+	for _, qp := range resource.ListQueryParams {
+		paramType := qp.Type
+		if paramType == "" {
+			paramType = "string"
+		}
+		params = append(params, map[string]interface{}{
+			"name":        qp.Name,
+			"in":          "query",
+			"description": qp.Description,
+			"required":    qp.Required,
+			"schema":      map[string]interface{}{"type": paramType},
+		})
+	}
+
 	endpoints := map[string]interface{}{
 		"get": map[string]interface{}{
 			"summary":     "List " + resource.PluralName,
 			"description": description,
 			"tags":        tags,
-			"parameters": []map[string]interface{}{
-				{
-					"name":        "limit",
-					"in":          "query",
-					"description": fmt.Sprintf("Maximum number of items to return (default: %d, max: %d)", cfg.PaginationLimit, cfg.PaginationMaxLimit),
-					"schema":      map[string]interface{}{"type": "integer", "default": cfg.PaginationLimit, "maximum": cfg.PaginationMaxLimit},
-				},
-				{
-					"name":        "offset",
-					"in":          "query",
-					"description": "Number of items to skip (default: 0)",
-					"schema":      map[string]interface{}{"type": "integer", "default": 0, "minimum": 0},
-				},
-				{
-					"name":        "count",
-					"in":          "query",
-					"description": "Include total count in response (adds hydra:totalItems field)",
-					"schema":      map[string]interface{}{"type": "boolean", "default": false},
-				},
-				{
-					"name":        "expand",
-					"in":          "query",
-					"description": "Comma-separated list of relations to expand",
-					"schema":      map[string]string{"type": "string"},
-				},
-			},
+			"parameters":  params,
 			"responses": map[string]interface{}{
 				"200": map[string]interface{}{
 					"description": "Hydra paginated collection",
