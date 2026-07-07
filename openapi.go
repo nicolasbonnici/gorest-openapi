@@ -128,32 +128,34 @@ func (p *OpenAPIPlugin) SetupEndpoints(router fiber.Router) error {
 		return c.SendString(html)
 	})
 
+	cache := newSpecCache(func() (map[string]interface{}, error) {
+		return buildStaticSpec(router, GeneratorConfig{
+			DTOsDirectory:      p.dtosDirectory,
+			PluginRegistry:     p.pluginRegistry,
+			PaginationLimit:    p.paginationLimit,
+			PaginationMaxLimit: p.paginationMaxLimit,
+			Title:              p.title,
+			Version:            p.version,
+			Description:        p.description,
+		})
+	})
+
 	router.Get("/openapi.json", func(c fiber.Ctx) error {
-		// Build server URL from request
 		protocol := "http"
 		if c.Protocol() == "https" {
 			protocol = "https"
 		}
 		serverURL := fmt.Sprintf("%s://%s", protocol, c.Hostname())
 
-		spec, err := generateOpenAPISpec(router, GeneratorConfig{
-			DTOsDirectory:      p.dtosDirectory,
-			PluginRegistry:     p.pluginRegistry,
-			PaginationLimit:    p.paginationLimit,
-			PaginationMaxLimit: p.paginationMaxLimit,
-			ServerURL:          serverURL,
-			Title:              p.title,
-			Version:            p.version,
-			Description:        p.description,
-		})
-
+		raw, err := cache.bytes(serverURL, encoderFrom(c))
 		if err != nil {
 			return c.Status(500).JSON(fiber.Map{
 				"error": fmt.Sprintf("Failed to generate OpenAPI spec: %v", err),
 			})
 		}
 
-		return c.JSON(spec)
+		c.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSONCharsetUTF8)
+		return c.Send(raw)
 	})
 
 	logger.Log.Info("Api spec available", "url", fmt.Sprintf("http://localhost:%s/%s", "8000", "openapi"))

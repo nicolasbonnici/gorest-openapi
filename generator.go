@@ -20,6 +20,23 @@ type GeneratorConfig struct {
 }
 
 func generateOpenAPISpec(router fiber.Router, cfg GeneratorConfig) (map[string]interface{}, error) {
+	spec, err := buildStaticSpec(router, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	spec["servers"] = []map[string]string{
+		{"url": cfg.ServerURL, "description": "Development server"},
+	}
+
+	return spec, nil
+}
+
+// buildStaticSpec assembles every part of the spec that is invariant for a
+// given boot (paths, schemas, security). The request-dependent servers block is
+// injected by the caller so this result can be built once and reused across
+// requests regardless of the incoming Host.
+func buildStaticSpec(router fiber.Router, cfg GeneratorConfig) (map[string]interface{}, error) {
 	paths := map[string]interface{}{}
 	components := map[string]interface{}{
 		"schemas": make(map[string]interface{}),
@@ -124,9 +141,6 @@ func generateOpenAPISpec(router fiber.Router, cfg GeneratorConfig) (map[string]i
 			"title":       cfg.Title,
 			"version":     cfg.Version,
 			"description": cfg.Description,
-		},
-		"servers": []map[string]string{
-			{"url": cfg.ServerURL, "description": "Development server"},
 		},
 		"paths":      paths,
 		"components": components,
