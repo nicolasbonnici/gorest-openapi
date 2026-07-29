@@ -1,7 +1,8 @@
 # GoREST OpenAPI Plugin
 
 [![CI](https://github.com/nicolasbonnici/gorest-openapi/actions/workflows/ci.yml/badge.svg)](https://github.com/nicolasbonnici/gorest-openapi/actions/workflows/ci.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/nicolasbonnici/gorest-openapi)](https://goreportcard.com/report/github.com/nicolasbonnici/gorest-openapi)
+[![Go Reference](https://pkg.go.dev/badge/github.com/nicolasbonnici/gorest-openapi.svg)](https://pkg.go.dev/github.com/nicolasbonnici/gorest-openapi)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/nicolasbonnici/gorest-openapi)](https://github.com/nicolasbonnici/gorest-openapi/blob/HEAD/go.mod)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 OpenAPI documentation plugin for GoREST framework.
