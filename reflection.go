@@ -14,7 +14,7 @@ func buildSchemaFromModel(model interface{}) map[string]interface{} {
 	}
 
 	t := reflect.TypeOf(model)
-	if t.Kind() == reflect.Ptr {
+	if t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
 
@@ -59,7 +59,7 @@ func processStructField(field reflect.StructField, properties map[string]interfa
 
 	isOmitEmpty := strings.Contains(jsonTag, "omitempty")
 	fieldType := field.Type
-	isPointer := fieldType.Kind() == reflect.Ptr
+	isPointer := fieldType.Kind() == reflect.Pointer
 
 	if isPointer {
 		fieldType = fieldType.Elem()
