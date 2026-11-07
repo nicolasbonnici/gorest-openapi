@@ -156,6 +156,7 @@ func buildCollectionEndpoints(resource resourceDTOs, schemaName string, cfg Gene
 			"summary":     "List " + resource.PluralName,
 			"description": "Retrieve a list of " + resource.PluralName,
 			"tags":        []string{schemaName},
+			"security":    publicRequirement(),
 			"parameters": []map[string]interface{}{
 				{
 					"name":        "limit",
@@ -222,6 +223,7 @@ func buildCollectionEndpoints(resource resourceDTOs, schemaName string, cfg Gene
 			"summary":     "Create " + resource.Name,
 			"description": "Create a new " + resource.Name,
 			"tags":        []string{schemaName},
+			"security":    securedRequirement(),
 			"requestBody": map[string]interface{}{
 				"required": true,
 				"content": map[string]interface{}{
@@ -254,6 +256,7 @@ func buildItemEndpoints(resource resourceDTOs, schemaName string) map[string]int
 			"summary":     "Get " + resource.Name + " by ID",
 			"description": "Retrieve a single " + resource.Name + " by ID",
 			"tags":        []string{schemaName},
+			"security":    publicRequirement(),
 			"parameters": []map[string]interface{}{
 				{
 					"name":        "id",
@@ -283,6 +286,7 @@ func buildItemEndpoints(resource resourceDTOs, schemaName string) map[string]int
 			"summary":     "Update " + resource.Name + " by ID",
 			"description": "Update an existing " + resource.Name,
 			"tags":        []string{schemaName},
+			"security":    securedRequirement(),
 			"parameters": []map[string]interface{}{
 				{
 					"name":        "id",
@@ -322,6 +326,7 @@ func buildItemEndpoints(resource resourceDTOs, schemaName string) map[string]int
 			"summary":     "Delete " + resource.Name + " by ID",
 			"description": "Delete an existing " + resource.Name,
 			"tags":        []string{schemaName},
+			"security":    securedRequirement(),
 			"parameters": []map[string]interface{}{
 				{
 					"name":        "id",
