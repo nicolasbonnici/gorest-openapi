@@ -54,6 +54,7 @@ func generateRouteSpec(path, method string) map[string]interface{} {
 		"summary":     summary,
 		"description": description,
 		"tags":        []string{tag},
+		"security":    operationSecurity(path, method),
 	}
 
 	if strings.Contains(path, ":") {
